@@ -1,34 +1,59 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// App.tsx
 
-function App() {
-  const [count, setCount] = useState(0)
+import { useState } from "react"
+import Title from "./components/Title"
+import Form from "./components/Form"
+import Results from "./components/Results"
+import Loading from "./components/Loading"
 
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+type ResultsState = {
+  country: string
+  cityName: string
+  temperature: string
+  conditionText: string
+  icon: string
+}
+
+const App = () => {
+
+  const[loading, setLoading] = useState<boolean>(false)
+
+  const [city, setCity] = useState<string>("")
+
+  const [results, setResults] = useState<ResultsState>({
+    country: "",
+    cityName: "",
+    temperature: "",
+    conditionText: "",
+    icon: ""
+  })
+
+  const getWeather = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setLoading(true)
+    fetch(`https://api.weatherapi.com/v1/current.json?key=c6508902815d4590a6e112121240205&q=${city}&aqi=no`)
+      .then(res => res.json())
+      .then(data => {setResults({
+        country: data.location.country,
+        cityName: data.location.name,
+        temperature: data.current.temp_c,
+        conditionText: data.current.condition.text,
+        icon: data.current.condition.icon
+        })
+        setLoading(false)
+        setCity("")
+      }).catch(() => alert("エラーが発生しました。ページをリロードして、もう一度入力してください"))
+  }
+  
+
+  return(
+    <div className="wrapper">
+      <div className="container">
+        <Title/>
+        <Form setCity={setCity} getWeather={getWeather} city={city}/>
+        {loading ? <Loading/> : <Results results={results}/>}
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    </div>
   )
 }
 
